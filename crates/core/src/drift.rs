@@ -34,17 +34,43 @@ pub enum DriftSeverity {
 pub enum DriftKind {
     // Critical
     TableMissing,
-    ColumnMissing { column: String },
-    ColumnTypeMismatch { column: String, expected: String, found: String },
-    NullabilityConflict { column: String, model_nullable: bool, db_nullable: bool },
+    ColumnMissing {
+        column: String,
+    },
+    ColumnTypeMismatch {
+        column: String,
+        expected: String,
+        found: String,
+    },
+    NullabilityConflict {
+        column: String,
+        model_nullable: bool,
+        db_nullable: bool,
+    },
 
     // Warning
-    LengthMismatch { column: String, model_length: u32, db_length: u32 },
-    PrecisionMismatch { column: String, model_precision: u32, db_precision: u32 },
-    IndexMissing { columns: Vec<String> },
-    UniqueConstraintMissing { columns: Vec<String> },
+    LengthMismatch {
+        column: String,
+        model_length: u32,
+        db_length: u32,
+    },
+    PrecisionMismatch {
+        column: String,
+        model_precision: u32,
+        db_precision: u32,
+    },
+    IndexMissing {
+        columns: Vec<String>,
+    },
+    UniqueConstraintMissing {
+        columns: Vec<String>,
+    },
 
     // Info
-    ExtraColumn { column: String },
-    ExtraIndex { index_name: String },
+    ExtraColumn {
+        column: String,
+    },
+    ExtraIndex {
+        index_name: String,
+    },
 }
