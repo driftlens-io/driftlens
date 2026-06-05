@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            tc.constraint_name AS \"constraint_name!: String\",\n            tc.constraint_type AS \"constraint_type!: String\",\n            array_agg(kcu.column_name ORDER BY kcu.ordinal_position) AS \"columns!: Vec<String>\"\n        FROM information_schema.table_constraints tc\n        JOIN information_schema.key_column_usage kcu\n          ON tc.constraint_name = kcu.constraint_name\n         AND tc.table_schema    = kcu.table_schema\n        WHERE tc.table_schema = $1\n          AND tc.table_name   = $2\n        GROUP BY tc.constraint_name, tc.constraint_type\n        ORDER BY tc.constraint_name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "constraint_name!: String",
+        "type_info": "Name"
+      },
+      {
+        "ordinal": 1,
+        "name": "constraint_type!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "columns!: Vec<String>",
+        "type_info": {
+          "Custom": {
+            "name": "_sql_identifier",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "sql_identifier",
+                  "kind": {
+                    "Domain": "Name"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Name",
+        "Name"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "5ceba3bfedb6a802863c30a084fbd964976a4b04c354efce29bf5c3302355b96"
+}

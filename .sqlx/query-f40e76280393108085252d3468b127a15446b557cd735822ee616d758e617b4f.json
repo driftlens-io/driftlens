@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            column_name,\n            data_type,\n            is_nullable,\n            character_maximum_length,\n            numeric_precision,\n            numeric_scale,\n            column_default\n        FROM information_schema.columns\n        WHERE table_schema = $1\n          AND table_name   = $2\n        ORDER BY ordinal_position\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "column_name",
+        "type_info": "Name"
+      },
+      {
+        "ordinal": 1,
+        "name": "data_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "is_nullable",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "character_maximum_length",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "numeric_precision",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "numeric_scale",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "column_default",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Name",
+        "Name"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "f40e76280393108085252d3468b127a15446b557cd735822ee616d758e617b4f"
+}
