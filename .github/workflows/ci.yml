@@ -38,3 +38,48 @@ jobs:
 
       - name: Format check
         run: cargo fmt --all -- --check
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: driftlens_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install psql client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Apply fixture schema
+        run: |
+          psql -h localhost -U postgres -d driftlens_test \
+            -f tests/fixtures/sql-schemas/postgres/simple.sql
+        env:
+          PGPASSWORD: postgres
+
+      - name: Run integration tests
+        run: |
+          cargo test --package driftlens-db-probe -- --ignored --nocapture
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/driftlens_test
