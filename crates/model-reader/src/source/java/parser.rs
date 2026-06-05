@@ -83,13 +83,51 @@ pub fn parse_file(source: &str, path: &Path) -> Option<EntityModel> {
 }
 
 fn extract_table_name(source: &str) -> Option<String> {
-    // @Table(name = "table_name") or @Table(name="table_name")
-    let re = Regex::new(r#"@Table\s*\([^)]*name\s*=\s*"([^"]+)""#).ok()?;
-    if let Some(cap) = re.captures(source) {
+    // Check if @Table exists
+    let table_pos = match source.find("@Table") {
+        Some(pos) => pos,
+        None => {
+            // No @Table — fallback to class name convention
+            let class_name = extract_class_name(source)?;
+            return Some(camel_to_snake(&class_name));
+        }
+    };
+
+    let after_table = &source[table_pos..];
+
+    // Find the opening parenthesis
+    let paren_start = match after_table.find('(') {
+        Some(pos) => pos,
+        None => {
+            // @Table without parentheses — fallback
+            let class_name = extract_class_name(source)?;
+            return Some(camel_to_snake(&class_name));
+        }
+    };
+
+    let after_paren = &after_table[paren_start + 1..];
+
+    // Collect only top-level content — stop at nested { } blocks
+    let mut depth = 0i32;
+    let mut top_level = String::new();
+
+    for c in after_paren.chars() {
+        match c {
+            '{' => depth += 1,
+            '}' => depth -= 1,
+            ')' if depth == 0 => break,
+            _ if depth == 0 => top_level.push(c),
+            _ => {}
+        }
+    }
+
+    // Extract name = "..." from top-level content only
+    let re = Regex::new(r#"(?:^|,|\()\s*name\s*=\s*"([^"]+)""#).ok()?;
+    if let Some(cap) = re.captures(&top_level) {
         return Some(cap[1].to_string());
     }
 
-    // @Table without name — fallback to class name convention
+    // Fallback to class name convention
     let class_name = extract_class_name(source)?;
     Some(camel_to_snake(&class_name))
 }
@@ -578,5 +616,19 @@ mod tests {
             .map(|c| c.column_name.as_str())
             .collect();
         assert!(!col_names.contains(&"readers"));
+    }
+
+    #[test]
+    fn test_table_name_with_nested_index_annotation() {
+        let source = r#"
+        @Entity
+        @Table(name = "person", indexes = {
+            @Index(name = "idx_user_id", columnList = "user_id")
+        })
+        public class Person {}
+    "#;
+
+        let entity = parse_file(source, Path::new("Person.java")).unwrap();
+        assert_eq!(entity.table_name, "person");
     }
 }
