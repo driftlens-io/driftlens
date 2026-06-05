@@ -1,0 +1,17 @@
+[database]
+url = "${DATABASE_URL}"
+schema = "public"
+
+[model]
+source_dirs = ["src/main/java"]
+bytecode_dirs = ["target/classes"]
+strategy = "both"
+
+[rules]
+blocking_severities = ["Critical"]
+ignore_extra_columns = true
+ignore_extra_indexes = false
+
+[[rules.overrides]]
+table = "audit_log"
+ignore = true
