@@ -1,0 +1,21 @@
+[package]
+name = "driftlens"
+description = "Detects JPA schema drift before it hits production"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "driftlens"
+path = "src/main.rs"
+
+[dependencies]
+driftlens-core = { path = "../crates/core" }
+driftlens-model-reader = { path = "../crates/model-reader" }
+driftlens-db-probe = { path = "../crates/db-probe" }
+driftlens-reporter = { path = "../crates/reporter" }
+clap = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
