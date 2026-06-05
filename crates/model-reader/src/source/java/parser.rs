@@ -66,7 +66,7 @@ pub fn parse_file(source: &str, path: &Path) -> Option<EntityModel> {
 
     // @EmbeddedId — composite key, not supported in this version
     // Skipping to avoid false positives in drift detection
-    // Track: https://github.com/driftlens-io/driftlens/issues/<N>
+    // Track: https://github.com/driftlens-io/driftlens/issues/8
     if source.contains("@EmbeddedId") {
         return None;
     }
