@@ -4,3 +4,5 @@
 pub mod oracle;
 pub mod postgres;
 pub mod probe;
+
+pub use postgres::PostgresProbe;

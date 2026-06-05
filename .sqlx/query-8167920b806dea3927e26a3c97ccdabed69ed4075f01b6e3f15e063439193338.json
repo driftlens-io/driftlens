@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            i.relname AS \"index_name!: String\",\n            ix.indisunique AS \"is_unique!: bool\",\n            array_agg(a.attname ORDER BY array_position(ix.indkey, a.attnum)) AS \"columns!: Vec<String>\"\n        FROM pg_class t\n        JOIN pg_index ix     ON t.oid = ix.indrelid\n        JOIN pg_class i      ON i.oid = ix.indexrelid\n        JOIN pg_attribute a  ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)\n        JOIN pg_namespace n  ON n.oid = t.relnamespace\n        WHERE n.nspname = $1\n          AND t.relname = $2\n          AND t.relkind = 'r'\n        GROUP BY i.relname, ix.indisunique\n        ORDER BY i.relname\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "index_name!: String",
+        "type_info": "Name"
+      },
+      {
+        "ordinal": 1,
+        "name": "is_unique!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "columns!: Vec<String>",
+        "type_info": "NameArray"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Name",
+        "Name"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "8167920b806dea3927e26a3c97ccdabed69ed4075f01b6e3f15e063439193338"
+}
