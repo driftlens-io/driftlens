@@ -1,0 +1,46 @@
+name: Stale
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  stale:
+    name: Mark and close stale issues and PRs
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/stale@v9
+        with:
+          # Issues
+          days-before-issue-stale: 60
+          days-before-issue-close: 7
+          stale-issue-label: stale
+          stale-issue-message: >
+            This issue has been inactive for 60 days and is now marked as stale.
+            If it is still relevant, please leave a comment or it will be closed in 7 days.
+          close-issue-message: >
+            This issue was closed due to inactivity.
+            Feel free to reopen if it is still relevant.
+
+          # Pull Requests
+          days-before-pr-stale: 30
+          days-before-pr-close: 7
+          stale-pr-label: stale
+          stale-pr-message: >
+            This pull request has been inactive for 30 days and is now marked as stale.
+            If it is still being worked on, please leave a comment or it will be closed in 7 days.
+          close-pr-message: >
+            This pull request was closed due to inactivity.
+            Feel free to reopen if you'd like to continue.
+
+          # Never mark these as stale
+          exempt-issue-labels: "pinned,roadmap,security,good first issue"
+          exempt-pr-labels: "pinned,roadmap,security"
+
+          # Only process open items
+          operations-per-run: 100
