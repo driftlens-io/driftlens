@@ -1,6 +1,6 @@
 [package]
 name = "driftlens-model-reader"
-description = "Reads JPA entities from Java source files and bytecode"
+description = "Reads data model definitions from source files and bytecode"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,3 +10,5 @@ driftlens-core = { path = "../core" }
 serde = { workspace = true }
 anyhow = { workspace = true }
 tracing = { workspace = true }
+regex = "1"
+walkdir = "2"

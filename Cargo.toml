@@ -38,3 +38,6 @@ sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres"] }
 clap = { version = "4", features = ["derive"] }
 
 async-trait = "0.1"
+
+regex = "1"
+walkdir = "2"
