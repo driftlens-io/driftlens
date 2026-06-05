@@ -64,6 +64,13 @@ pub fn parse_file(source: &str, path: &Path) -> Option<EntityModel> {
         return None;
     }
 
+    // @EmbeddedId — composite key, not supported in this version
+    // Skipping to avoid false positives in drift detection
+    // Track: https://github.com/driftlens-io/driftlens/issues/<N>
+    if source.contains("@EmbeddedId") {
+        return None;
+    }
+
     let table_name = extract_table_name(source)?;
     let schema = extract_schema_name(source);
     let class_name = extract_class_name(source)?;
@@ -717,5 +724,30 @@ mod tests {
         assert!(col_names.contains(&"user_id"));
         assert!(col_names.contains(&"document_id"));
         assert!(col_names.contains(&"reader_date"));
+    }
+
+    #[test]
+    fn test_skip_embedded_id_entity() {
+        let source = r#"
+        @Entity
+        @Table(name = "person_offices")
+        public class PersonOffices {
+            @EmbeddedId
+            private PersonOfficeId id;
+
+            @ManyToOne
+            @MapsId("personId")
+            @JoinColumn(name = "person_id")
+            private Person person;
+
+            @ManyToOne
+            @MapsId("officeId")
+            @JoinColumn(name = "office_id")
+            private Office office;
+        }
+    "#;
+
+        // Should be skipped — @EmbeddedId not supported
+        assert!(parse_file(source, Path::new("PersonOffices.java")).is_none());
     }
 }
