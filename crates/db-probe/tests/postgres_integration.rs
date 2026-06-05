@@ -6,6 +6,7 @@ fn database_url() -> String {
 }
 
 #[tokio::test]
+#[ignore = "requires DATABASE_URL"]
 async fn test_introspect_users_table() {
     let probe = PostgresProbe::connect(&database_url())
         .await
@@ -37,6 +38,7 @@ async fn test_introspect_users_table() {
 }
 
 #[tokio::test]
+#[ignore = "requires DATABASE_URL"]
 async fn test_introspect_post_table() {
     let probe = PostgresProbe::connect(&database_url())
         .await
@@ -68,6 +70,7 @@ async fn test_introspect_post_table() {
 }
 
 #[tokio::test]
+#[ignore = "requires DATABASE_URL"]
 async fn test_introspect_multiple_tables() {
     let probe = PostgresProbe::connect(&database_url())
         .await
@@ -93,6 +96,7 @@ async fn test_introspect_multiple_tables() {
 }
 
 #[tokio::test]
+#[ignore = "requires DATABASE_URL"]
 async fn test_indexes_and_constraints() {
     let probe = PostgresProbe::connect(&database_url())
         .await

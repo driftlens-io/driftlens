@@ -99,9 +99,16 @@ psql -d driftlens_test -f tests/fixtures/sql-schemas/postgres/simple.sql
 
 ### Run integration tests
 
+Integration tests are ignored by default and require a live database:
+
 ```bash
+# run only integration tests
 DATABASE_URL=postgres://postgres:postgres@localhost:5432/driftlens_test \
-  cargo test --package driftlens-db-probe -- --nocapture
+  cargo test --package driftlens-db-probe -- --ignored --nocapture
+
+# run all tests including integration
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/driftlens_test \
+  cargo test --package driftlens-db-probe -- --include-ignored --nocapture
 ```
 
 ---
