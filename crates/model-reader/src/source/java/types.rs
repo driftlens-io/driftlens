@@ -38,12 +38,12 @@ impl TypeMapping {
 /// - `java_type` — simple class name (e.g. "String", "Instant", "GoalStatus")
 /// - `enum_mapping` — present when the field has @Enumerated
 /// - `column_length` — value from @Column(length = N)
-/// - `id_strategy` — "IDENTITY" or "UUID" when field has @GeneratedValue
+/// - `_id_strategy` — "IDENTITY" or "UUID" when field has @GeneratedValue
 pub fn map_java_type(
     java_type: &str,
     enum_mapping: Option<&EnumMapping>,
     column_length: Option<u32>,
-    id_strategy: Option<&str>,
+    _id_strategy: Option<&str>,
 ) -> TypeMapping {
     // Enums — type depends on @Enumerated annotation
     if let Some(mapping) = enum_mapping {
@@ -60,13 +60,7 @@ pub fn map_java_type(
         "String" => TypeMapping::new("character varying").with_length(column_length.unwrap_or(255)),
 
         // Integer types
-        "Long" | "long" => {
-            if id_strategy == Some("IDENTITY") {
-                TypeMapping::new("bigint")
-            } else {
-                TypeMapping::new("bigint")
-            }
-        }
+        "Long" | "long" => TypeMapping::new("bigint"),
         "Integer" | "int" => TypeMapping::new("integer"),
         "Short" | "short" => TypeMapping::new("smallint"),
 

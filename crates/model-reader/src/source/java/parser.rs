@@ -47,7 +47,7 @@ pub fn parse_directory(source_dir: &Path) -> Result<Vec<EntityModel>> {
         .filter(|e| {
             e.path()
                 .extension()
-                .map_or(false, |ext| parser.supports(ext.to_str().unwrap_or("")))
+                .is_some_and(|ext| parser.supports(ext.to_str().unwrap_or("")))
         })
     {
         let content = std::fs::read_to_string(entry.path())?;
@@ -273,10 +273,8 @@ fn parse_field_block(block: &str) -> Option<driftlens_core::entity::ColumnModel>
         val != "false"
     } else if let Some(val) = extract_attribute(block, "@JoinColumn", "nullable") {
         val != "false"
-    } else if block.contains("optional = false") {
-        false
     } else {
-        true
+        !block.contains("optional = false")
     };
 
     // Length from @Column(length = N)
