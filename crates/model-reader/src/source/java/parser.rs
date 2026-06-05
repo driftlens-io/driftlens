@@ -250,6 +250,9 @@ fn parse_field_block(block: &str) -> Option<driftlens_core::entity::ColumnModel>
         name
     } else if let Some(name) = extract_attribute(block, "@JoinColumn", "name") {
         name
+    } else if block.contains("@ManyToOne") || block.contains("@OneToOne") {
+        // No explicit @JoinColumn — Hibernate infers fieldName + "_id"
+        format!("{}_id", camel_to_snake(&field_name))
     } else {
         camel_to_snake(&field_name)
     };
@@ -272,15 +275,6 @@ fn parse_field_block(block: &str) -> Option<driftlens_core::entity::ColumnModel>
     // Length from @Column(length = N)
     let length = extract_attribute(block, "@Column", "length").and_then(|v| v.parse::<u32>().ok());
 
-    // Enum mapping
-    let enum_mapping = if block.contains("EnumType.STRING") {
-        Some(super::types::EnumMapping::String)
-    } else if block.contains("@Enumerated") {
-        Some(super::types::EnumMapping::Ordinal)
-    } else {
-        None
-    };
-
     // ID generation strategy
     let id_strategy = if block.contains("GenerationType.IDENTITY") {
         Some("IDENTITY")
@@ -290,17 +284,37 @@ fn parse_field_block(block: &str) -> Option<driftlens_core::entity::ColumnModel>
         None
     };
 
-    // FK fields always map to varchar (references String id)
-    let effective_type = if block.contains("@JoinColumn") && !is_id {
+    // FK fields always map to varchar
+    let effective_type = if block.contains("@JoinColumn")
+        || block.contains("@ManyToOne")
+        || block.contains("@OneToOne") && !is_id
+    {
         "String".to_string()
     } else {
         java_type
     };
 
+    // Enum mapping
+    let enum_mapping = if block.contains("EnumType.STRING") {
+        Some(super::types::EnumMapping::String)
+    } else if block.contains("@Enumerated") {
+        Some(super::types::EnumMapping::Ordinal)
+    } else if !block.contains("@JoinColumn") && block.contains("@Column") {
+        // No @Enumerated but type is unknown and has @Column
+        // Hibernate default for enums without @Enumerated is ORDINAL
+        let probe = super::types::map_java_type(&effective_type, None, length, id_strategy);
+        if probe.sql_type == "unknown" {
+            Some(super::types::EnumMapping::Ordinal)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     let type_mapping =
         super::types::map_java_type(&effective_type, enum_mapping.as_ref(), length, id_strategy);
 
-    // Skip unresolvable types silently — will be reported as unsupported
     if type_mapping.sql_type == "unknown" {
         return None;
     }
@@ -630,5 +644,78 @@ mod tests {
 
         let entity = parse_file(source, Path::new("Person.java")).unwrap();
         assert_eq!(entity.table_name, "person");
+    }
+
+    #[test]
+    fn test_enum_without_enumerated_annotation() {
+        let source = r#"
+        @Entity
+        @Table(name = "goal")
+        public class Goal {
+            @Id
+            private String id;
+
+            @Column(name = "status")
+            private GoalStatus status;
+
+            @Column(name = "name")
+            private String name;
+        }
+    "#;
+
+        let entity = parse_file(source, Path::new("Goal.java")).unwrap();
+        let col_names: Vec<&str> = entity
+            .columns
+            .iter()
+            .map(|c| c.column_name.as_str())
+            .collect();
+
+        // status should be present — inferred as smallint (Ordinal default)
+        assert!(col_names.contains(&"status"));
+        assert!(col_names.contains(&"name"));
+
+        let status = entity
+            .columns
+            .iter()
+            .find(|c| c.column_name == "status")
+            .unwrap();
+        // length should be None for smallint
+        assert_eq!(status.length, None);
+    }
+
+    #[test]
+    fn test_many_to_one_without_join_column() {
+        let source = r#"
+        @Entity
+        @Table(name = "document_reader")
+        public class DocumentReader {
+            @Id
+            @GeneratedValue(strategy = GenerationType.IDENTITY)
+            private Long id;
+
+            @ManyToOne
+            private User user;
+
+            @ManyToOne
+            private Document document;
+
+            @Column(name = "reader_date")
+            private LocalDateTime readerDate;
+        }
+    "#;
+
+        let entity = parse_file(source, Path::new("DocumentReader.java")).unwrap();
+        let col_names: Vec<&str> = entity
+            .columns
+            .iter()
+            .map(|c| c.column_name.as_str())
+            .collect();
+
+        println!("Columns: {:?}", col_names);
+
+        assert!(col_names.contains(&"id"));
+        assert!(col_names.contains(&"user_id"));
+        assert!(col_names.contains(&"document_id"));
+        assert!(col_names.contains(&"reader_date"));
     }
 }
